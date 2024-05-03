@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getLeaders } from "../../api";
-import styles from "./LeaderboardPage.module.css";
+import styles from "./Leaderboard.module.css";
 
 const farmatSeconds = time => {
   const minutes = Math.floor(time / 60);
   const seconds = time % 60;
   return `${minutes.toString().padStart(2, "0")}: ${seconds.toString().padStart(2, "0")}`;
 };
-export function LeaderboardPage() {
+export function Leaderboard() {
   const [leaders, setLeaders] = useState([]);
   useEffect(() => {
     getLeaders().then(data => {

@@ -5,7 +5,7 @@ import styles from "./Cards.module.css";
 import { EndGameModal } from "../../components/EndGameModal/EndGameModal";
 import { Button } from "../../components/Button/Button";
 import { Card } from "../../components/Card/Card";
-import { useCheckbox } from "../../pages/SelectLevelPage/CheckboxContext";
+import { Link } from "react-router-dom";
 
 // Игра закончилась
 const STATUS_LOST = "STATUS_LOST";
@@ -41,9 +41,15 @@ function getTimerValue(startDate, endDate) {
  * pairsCount - сколько пар будет в игре
  * previewSeconds - сколько секунд пользователь будет видеть все карты открытыми до начала игры
  */
+export const checkEasyMode = () => {
+  const mode = localStorage.getItem("mode");
+  return mode === "easy" ? true : false;
+};
 export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
   // В cards лежит игровое поле - массив карт и их состояние открыта\закрыта
+  const isEasyMode = checkEasyMode();
   const [cards, setCards] = useState([]);
+  const [lives, setLives] = useState(isEasyMode ? 3 : 1);
   // Текущий статус игры
   const [status, setStatus] = useState(STATUS_PREVIEW);
 
@@ -63,15 +69,14 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
     setStatus(status);
   }
   function startGame() {
-    setMistakesCount(0);
     const startDate = new Date();
     setGameEndDate(null);
     setGameStartDate(startDate);
     setTimer(getTimerValue(startDate, null));
     setStatus(STATUS_IN_PROGRESS);
+    setLives(isEasyMode ? 3 : 1);
   }
   function resetGame() {
-    setMistakesCount(0);
     setGameStartDate(null);
     setGameEndDate(null);
     setTimer(getTimerValue(null, null));
@@ -85,14 +90,13 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
    * - "Игрок проиграл", если на поле есть две открытые карты без пары
    * - "Игра продолжается", если не случилось первых двух условий
    */
-
-  const [mistakesCount, setMistakesCount] = useState(0);
-
-  const { isEasyMode } = useCheckbox();
-
   const openCard = clickedCard => {
     // Если карта уже открыта, то ничего не делаем
     if (clickedCard.open) {
+      return;
+    }
+    const newOpenCards = cards.filter(card => card.open && !card.guessed);
+    if (newOpenCards.length === 2) {
       return;
     }
     // Игровое поле после открытия кликнутой карты
@@ -127,38 +131,48 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
       if (sameCards.length < 2) {
         return true;
       }
-
+      if (!isEasyMode) {
+        if (openCards.length > 1) {
+          const openCards = nextCards.map(card => {
+            if (card.open) {
+              return { ...card, open: true, guessed: true };
+            } else {
+              return card;
+            }
+          });
+          setCards(openCards);
+        }
+      }
       return false;
     });
-
-    // Проигрыш при совершении 3 ошибок
     if (isEasyMode) {
-      if (openCardsWithoutPair.length >= 2) {
-        setMistakesCount(prevCount => prevCount + 1);
-
-        setTimeout(() => {
-          const nextCardsWithoutPair = nextCards.map(card => {
-            if (openCardsWithoutPair.includes(card)) {
-              return {
-                ...card,
-                open: false,
-              };
+      setTimeout(() => {
+        const openedCards = cards.filter(card => card.open && !card.guessed);
+        if (openedCards.length > 0) {
+          const newCards = nextCards.map(card => {
+            if (openCardsWithoutPair.some(openCard => openCard.id === card.id)) {
+              return { ...card, open: false };
+            }
+            if (card.open) {
+              return { ...card, guessed: true };
             }
             return card;
           });
+          setCards(newCards);
+        }
+      }, 1000);
+    }
+    const playerLost = openCardsWithoutPair.length >= 2;
 
-          setCards(nextCardsWithoutPair);
-
-          if (mistakesCount + 1 === 3) {
-            finishGame(STATUS_LOST);
-          }
-        }, 1000);
+    // "Игрок проиграл", т.к на поле есть две открытые карты без пары
+    if (isEasyMode) {
+      if (playerLost) {
+        setLives(lives => lives - 1);
+        if (lives === 1) {
+          finishGame(STATUS_LOST);
+        }
       }
     } else {
-      // Проигрыш при совершении 1 ошибки
-      const playerLost = openCardsWithoutPair.length >= 2;
-
-      // "Игрок проиграл", т.к на поле есть две открытые карты без пары
       if (playerLost) {
         finishGame(STATUS_LOST);
         return;
@@ -229,9 +243,6 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
             </>
           )}
         </div>
-
-        {isEasyMode && <div className={styles.mistakesCount}>Осталось ошибок: {3 - mistakesCount}</div>}
-
         {status === STATUS_IN_PROGRESS ? <Button onClick={resetGame}>Начать заново</Button> : null}
       </div>
 
@@ -246,10 +257,14 @@ export function Cards({ pairsCount = 3, previewSeconds = 5 }) {
           />
         ))}
       </div>
-
+      <Link className={styles.backGame} to="/">
+        Вернуться назад
+      </Link>
+      {isEasyMode && <p>Осталось жизней:{lives}</p>}
       {isGameEnded ? (
         <div className={styles.modalContainer}>
           <EndGameModal
+            isLeader={status === STATUS_WON && pairsCount === 9 && !isEasyMode}
             isWon={status === STATUS_WON}
             gameDurationSeconds={timer.seconds}
             gameDurationMinutes={timer.minutes}
