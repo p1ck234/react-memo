@@ -1,38 +1,51 @@
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { getLeaders } from "../../api";
 import styles from "./LeaderboardPage.module.css";
 
-export default function LeaderboardPage() {
+const farmatSeconds = time => {
+  const minutes = Math.floor(time / 60);
+  const seconds = time % 60;
+  return `${minutes.toString().padStart(2, "0")}: ${seconds.toString().padStart(2, "0")}`;
+};
+export function LeaderboardPage() {
+  const [leaders, setLeaders] = useState([]);
+  useEffect(() => {
+    getLeaders().then(data => {
+      const sortedLeaders = [...data];
+      setLeaders(sortedLeaders.sort((a, b) => a.time - b.time));
+    });
+  }, []);
   return (
-    <div className={styles.container}>
-      <div className={styles.content}>
-        <div className={styles.header}>
-          <span className={styles.title}>Лидерборд</span>
-          <button className={styles.button}>Начать игру</button>
-        </div>
-        <div className={styles.board}>
-          <div className={styles.boardNames}>
-            <span>Позиция</span>
-            <span>Пользователь</span>
-            <span>Время</span>
-          </div>
-          <div className={styles.boardRating}>
-            <div className={styles.boardRatingPlace}>
-              <span>#1</span>
-              <span>ab98awj_918mlz1lavfh_ru</span>
-              <span>01:30</span>
-            </div>
-            <div className={styles.boardRatingPlace}>
-              <span>#2</span>
-              <span>ab98awj_918mlz1lavfh_ru</span>
-              <span>05:23</span>
-            </div>
-            <div className={styles.boardRatingPlace}>
-              <span>#3</span>
-              <span>ab98awj_918mlz1lavfh_ru</span>
-              <span>10:47</span>
-            </div>
-          </div>
-        </div>
+    <div className={styles.containerLeader}>
+      <div className={styles.leaderContainer}>
+        <div className={styles.heading}>Лидерборд</div>
+        <button className={styles.startButtonLeaderBoard} type="button">
+          Играть
+        </button>
       </div>
+      <div className={styles.containerInfoPanel}>
+        <div className={styles.infoPanel}>
+          <div className={styles.infoPositionName}>
+            <div className={styles.infoText}>Позиция</div>
+            <div className={styles.infoText}>Пользователь</div>
+          </div>
+          <div className={styles.infoTextTime}>Время</div>
+        </div>
+
+        {leaders.map((leader, index) => (
+          <div key={index} className={styles.infoPanel}>
+            <div className={styles.infoPositionName}>
+              <div className={styles.infoTextUser}># {index + 1}</div>
+              <div className={styles.infoTextUser}>{leader.name}</div>
+            </div>
+            <div className={styles.infoTextUser}>{farmatSeconds(leader.time)}</div>
+          </div>
+        ))}
+      </div>
+      <Link className={styles.backGameLeaderBoard} to="/">
+        Вернуться назад
+      </Link>
     </div>
   );
 }
