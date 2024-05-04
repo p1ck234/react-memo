@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getLeaders } from "../../api";
 import styles from "./Leaderboard.module.css";
 
@@ -16,12 +16,17 @@ export function Leaderboard() {
       setLeaders(sortedLeaders.sort((a, b) => a.time - b.time));
     });
   }, []);
+  const navigate = useNavigate();
+  const handleClickMode = () => {
+    navigate("/");
+  };
+
   return (
     <div className={styles.containerLeader}>
       <div className={styles.leaderContainer}>
         <div className={styles.heading}>Лидерборд</div>
-        <button className={styles.startButtonLeaderBoard} type="button">
-          Играть
+        <button className={styles.startButtonLeaderBoard} type="button" onClick={handleClickMode}>
+          Начать игру
         </button>
       </div>
       <div className={styles.containerInfoPanel}>
@@ -36,8 +41,28 @@ export function Leaderboard() {
         {leaders.map((leader, index) => (
           <div key={index} className={styles.infoPanel}>
             <div className={styles.infoPositionName}>
-              <div className={styles.infoTextUser}># {index + 1}</div>
-              <div className={styles.infoTextUser}>{leader.name}</div>
+              <div className={styles.infoTextUser}>
+                <p className={styles.numberUser}># {index + 1}</p>
+              </div>
+              <div className={styles.infoTextUser}>
+                <p className={styles.userName}>{leader.name}</p>
+              </div>
+            </div>
+            <div className={styles.achievements}>
+              {leader.achievements?.includes(1) ? (
+                <div className={styles.achievements_elemen} title="Игра пройдена в сложном режимe">
+                  <button className={styles.puzzleGame}></button>
+                </div>
+              ) : (
+                <button className={styles.puzzleGameOff}></button>
+              )}
+              {leader.achievements?.includes(2) ? (
+                <div className={styles.achievements_elemen} title="Игра пройдена без супер-сил">
+                  <button className={styles.openGame}></button>
+                </div>
+              ) : (
+                <button className={styles.openGameOff}></button>
+              )}
             </div>
             <div className={styles.infoTextUser}>{farmatSeconds(leader.time)}</div>
           </div>
