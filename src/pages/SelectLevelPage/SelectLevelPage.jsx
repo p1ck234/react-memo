@@ -1,78 +1,48 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { checkEasyMode } from "../../components/Cards/Cards";
+import { Link } from "react-router-dom";
 import styles from "./SelectLevelPage.module.css";
+import { Checkbox } from "../../components/Checkbox/Checkbox";
+import { Button } from "../../components/Button/Button";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setCurrentLevel } from "../../store/slices";
+import { getLeaders } from "../../api";
+import { setLeaders } from "../../store/slices";
 
 export function SelectLevelPage() {
-  const mode = checkEasyMode();
-  const [level, setLevel] = useState("3");
-  const [easyMode, setEasyMode] = useState(mode);
-
   const navigate = useNavigate();
-  const handleClick = () => {
-    const mode = easyMode ? "easy" : "hard";
-    localStorage.setItem("mode", mode);
-    navigate(`/game/${level}`);
+  const dispatch = useDispatch();
+  const [choosenLevel, setChoosenLevel] = useState(null);
+
+  const handleButtonClick = () => {
+    if (choosenLevel !== null) {
+      dispatch(setCurrentLevel({ choosenLevel }));
+      navigate(`/game/${choosenLevel}`);
+    }
   };
+
+  useEffect(() => {
+    getLeaders().then(leaders => dispatch(setLeaders(leaders)));
+  }, [dispatch]);
+
   return (
     <div className={styles.container}>
       <div className={styles.modal}>
         <h1 className={styles.title}>Выбери сложность</h1>
         <ul className={styles.levels}>
-          <li className={styles.level}>
-            <label>
-              <input
-                className={styles.levelInput}
-                type="radio"
-                value="3"
-                checked={level === "3"}
-                onChange={e => setLevel(e.target.value)}
-              />
-
-              <span className={styles.levelNumber}>1</span>
-            </label>
+          <li className={choosenLevel === 3 ? styles.choosenLevel : styles.level} onClick={() => setChoosenLevel(3)}>
+            1
           </li>
-          <li className={styles.level}>
-            <label>
-              <input
-                className={styles.levelInput}
-                type="radio"
-                value="6"
-                checked={level === "6"}
-                onChange={e => setLevel(e.target.value)}
-              />
-              <span className={styles.levelNumber}>2</span>
-            </label>
+          <li className={choosenLevel === 6 ? styles.choosenLevel : styles.level} onClick={() => setChoosenLevel(6)}>
+            2
           </li>
-          <li className={styles.level}>
-            <label>
-              <input
-                className={styles.levelInput}
-                type="radio"
-                value="9"
-                checked={level === "9"}
-                onChange={e => setLevel(e.target.value)}
-              />
-              <span className={styles.levelNumber}>3</span>
-            </label>
+          <li className={choosenLevel === 9 ? styles.choosenLevel : styles.level} onClick={() => setChoosenLevel(9)}>
+            3
           </li>
         </ul>
-        <div>
-          <label className={styles.modeGame}>
-            <input
-              className={styles.inputEasyMode}
-              type="checkbox"
-              checked={easyMode}
-              onChange={() => setEasyMode(!easyMode)}
-            />
-            <span className={styles.customCheckBox}></span>
-            <p className={styles.easyLevel}>Легкий режим (3 жизни)</p>
-          </label>
-        </div>
-        <button className={styles.startGameButton} type="button" onClick={handleClick}>
-          Играть
-        </button>
-        <Link className={styles.backGameLeader} to="/Leaderboard">
+        <Checkbox />
+        <Button children={"Играть"} onClick={handleButtonClick} />
+        <Link className={styles.leaderboardLink} to="/leaderboard">
           Перейти к лидерборду
         </Link>
       </div>
