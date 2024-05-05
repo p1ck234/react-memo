@@ -1,7 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
 import { GamePage } from "./pages/GamePage/GamePage";
 import { SelectLevelPage } from "./pages/SelectLevelPage/SelectLevelPage";
-import { Leaderboard } from "./components/Leaderboard/Leaderboard";
+import { LeaderBoard } from "./pages/LeaderBoard/LeaderBoard";
+
 export const router = createBrowserRouter(
   [
     {
@@ -13,8 +14,8 @@ export const router = createBrowserRouter(
       element: <GamePage />,
     },
     {
-      path: "/Leaderboard",
-      element: <Leaderboard />,
+      path: "/leaderboard",
+      element: <LeaderBoard />,
     },
   ],
   /**
