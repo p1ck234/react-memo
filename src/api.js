@@ -1,23 +1,22 @@
-const url = "https://wedev-api.sky.pro/api/v2/leaderboard";
-export const getLeaders = async () => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error("error");
-  }
-  const data = await response.json();
-  return data.leaders;
-};
+const host = "https://wedev-api.sky.pro/api/v2/leaderboard";
 
-export const addLeader = async ({ name, time, achievements }) => {
-  const response = await fetch(url, {
-    method: "POST",
-    body: JSON.stringify({
-      name,
-      time,
-      achievements,
-    }),
+export function getLeaders() {
+  return fetch(host).then(response => {
+    if (!response.ok) {
+      console.log("Что-то пошло не так");
+    } else {
+      return response.json();
+    }
   });
-  if (!response.ok) {
-    throw new Error("error");
-  }
-};
+}
+
+export function addLeader({ username, time, achievements }) {
+  return fetch(host, {
+    method: "POST",
+    body: JSON.stringify({ name: username, time: time, achievements: achievements() }),
+  }).then(response => {
+    if (!response.ok) {
+      console.log("Что-то пошло не так");
+    }
+  });
+}
